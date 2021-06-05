@@ -1,8 +1,8 @@
-defmodule Hammer.Supervisor do
+defmodule Beetle.Supervisor do
   @moduledoc """
-  Top-level Supervisor for the Hammer application.
+  Top-level Supervisor for the Beetle application.
   Starts a set of poolboy pools based on provided configuration,
-  which are latter called to by the `Hammer` module.
+  which are latter called to by the `Beetle` module.
   See the Application module for configuration examples.
   """
 
@@ -15,7 +15,7 @@ defmodule Hammer.Supervisor do
   # Single backend
   def init(config) when is_tuple(config) do
     children = [
-      to_pool_spec(:hammer_backend_single_pool, config)
+      to_pool_spec(:beetle_backend_single_pool, config)
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
@@ -25,7 +25,7 @@ defmodule Hammer.Supervisor do
   def init(config) when is_list(config) do
     children =
       config
-      |> Enum.map(fn {k, c} -> to_pool_spec(:"hammer_backend_#{k}_pool", c) end)
+      |> Enum.map(fn {k, c} -> to_pool_spec(:"beetle_backend_#{k}_pool", c) end)
 
     Supervisor.init(children, strategy: :one_for_one)
   end

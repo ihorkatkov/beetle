@@ -1,4 +1,4 @@
-# Hammer makefile
+# Beetle makefile
 
 default: format test docs coveralls
 

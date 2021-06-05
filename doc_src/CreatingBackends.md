@@ -1,16 +1,16 @@
 # Creating Backends
 
 
-See `Hammer.Backend.ETS` for a realistic example of a Hammer Backend module.
+See `Beetle.Backend.ETS` for a realistic example of a Beetle Backend module.
 
-Backends for Hammer are expected to implement the
-[Hammer.Backend](/hammer/Hammer.Backend.html) behaviour, and be named something
-like `Hammer.Backend.Foo`. Several instances of the backend worker will be
+Backends for Beetle are expected to implement the
+[Beetle.Backend](/beetle/Beetle.Backend.html) behaviour, and be named something
+like `Beetle.Backend.Foo`. Several instances of the backend worker will be
 started as a worker pool (using the poolboy library), and so backend processes
 should not assume that there is only one instance of this server process.
 
 
-## The `Hammer.Backend` behaviour
+## The `Beetle.Backend` behaviour
 
 The expected backend api is as follows:
 
@@ -28,7 +28,7 @@ called `FooDB` to store buckets, then an appropriate key would be
 Example:
 
 ```elixir
-  Hammer.Backend.Foo.start_link(expiry_ms: 60_000 * 60,
+  Beetle.Backend.Foo.start_link(expiry_ms: 60_000 * 60,
                                 cleanup_interval_ms: 60_000 * 10,
                                 foodb_config: [host: "localhost"])
 ```

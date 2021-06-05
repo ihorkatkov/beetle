@@ -28,7 +28,7 @@
 ## Changed
 
 - Use a worker-pool for the backend (via poolboy),
-  this avoids bottle-necking all traffic through a single hammer
+  this avoids bottle-necking all traffic through a single beetle
   process, thus improving throughput for the system overall
 
 ## Added
@@ -63,14 +63,14 @@
 
 - New, simpler API
   - No longer need to start backend processes manually
-  - Call `Hammer.check_rate` directly, rather than `use`ing a macro
-- Hammer is now an OTP application, configured via `Mix.Config`
+  - Call `Beetle.check_rate` directly, rather than `use`ing a macro
+- Beetle is now an OTP application, configured via `Mix.Config`
 
 
 ## 1.0.0
 
 ### Added
-- Formalise backend API in `Hammer.Backend` behaviour
+- Formalise backend API in `Beetle.Backend` behaviour
 
 
 ## 0.2.1

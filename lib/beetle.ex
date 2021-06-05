@@ -1,12 +1,12 @@
-defmodule Hammer do
+defmodule Beetle do
   @moduledoc """
-  Documentation for Hammer module.
+  Documentation for Beetle module.
 
-  This is the main API for the Hammer rate-limiter. This module assumes a
-  backend pool has been started, most likely by the Hammer application.
+  This is the main API for the Beetle rate-limiter. This module assumes a
+  backend pool has been started, most likely by the Beetle application.
   """
 
-  alias Hammer.Utils
+  alias Beetle.Utils
 
   @spec check_rate(id :: String.t(), scale_ms :: integer, limit :: integer) ::
           {:allow, count :: integer}
@@ -35,7 +35,7 @@ defmodule Hammer do
       end
   """
   def check_rate(id, scale_ms, limit) do
-    check_rate(:single, id, scale_ms, limit)
+    check_rate(Beetle.Backend.ETS, id, scale_ms, limit)
   end
 
   @spec check_rate(backend :: atom, id :: String.t(), scale_ms :: integer, limit :: integer) ::
@@ -76,7 +76,7 @@ defmodule Hammer do
   of each hit can be specified.
   """
   def check_rate_inc(id, scale_ms, limit, increment) do
-    check_rate_inc(:single, id, scale_ms, limit, increment)
+    check_rate_inc(Beetle.Backend.ETS, id, scale_ms, limit, increment)
   end
 
   @spec check_rate_inc(
@@ -138,7 +138,7 @@ defmodule Hammer do
 
   """
   def inspect_bucket(id, scale_ms, limit) do
-    inspect_bucket(:single, id, scale_ms, limit)
+    inspect_bucket(Beetle.Backend.ETS, id, scale_ms, limit)
   end
 
   @spec inspect_bucket(backend :: atom, id :: String.t(), scale_ms :: integer, limit :: integer) ::
@@ -187,7 +187,7 @@ defmodule Hammer do
 
   """
   def delete_buckets(id) do
-    delete_buckets(:single, id)
+    delete_buckets(Beetle.Backend.ETS, id)
   end
 
   @spec delete_buckets(backend :: atom, id :: String.t()) ::
@@ -216,7 +216,7 @@ defmodule Hammer do
 
   Returns a function which accepts an `id` suffix, which will be combined with
   the `id_prefix`. Calling this returned function is equivalent to:
-  `Hammer.check_rate("\#{id_prefix}\#{id}", scale_ms, limit)`
+  `Beetle.check_rate("\#{id_prefix}\#{id}", scale_ms, limit)`
 
   Example:
 
@@ -230,7 +230,7 @@ defmodule Hammer do
       end
   """
   def make_rate_checker(id_prefix, scale_ms, limit) do
-    make_rate_checker(:single, id_prefix, scale_ms, limit)
+    make_rate_checker(Beetle.Backend.ETS, id_prefix, scale_ms, limit)
   end
 
   @spec make_rate_checker(
@@ -251,9 +251,8 @@ defmodule Hammer do
     end
   end
 
-  defp call_backend(which, function, args) do
-    pool = Utils.pool_name(which)
-    backend = Utils.get_backend_module(which)
+  defp call_backend(backend, function, args) do
+    pool = Utils.pool_name(backend)
 
     :poolboy.transaction(
       pool,

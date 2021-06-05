@@ -1,4 +1,4 @@
-defmodule Hammer.Backend do
+defmodule Beetle.Backend do
   @moduledoc """
   The backend Behaviour module
   """

@@ -1,11 +1,11 @@
-defmodule Hammer.Backend.ETS do
+defmodule Beetle.Backend.ETS do
   @moduledoc """
-  An ETS backend for Hammer
+  An ETS backend for Beetle
 
   Note: This backend is suitable for development, testing, and small
   single-node deployments, but should not be used for production workloads.
 
-  The public API of this module is used by Hammer to store information about
+  The public API of this module is used by Beetle to store information about
   rate-limit 'buckets'. A bucket is identified by a `key`, which is a tuple
   `{bucket_number, id}`. The essential schema of a bucket is:
   `{key, count, created_at, updated_at}`, although backends are free to
@@ -13,30 +13,30 @@ defmodule Hammer.Backend.ETS do
 
   Use `start` or `start_link` to start the server:
 
-      {:ok, pid} = Hammer.Backend.ETS.start_link(args)
+      {:ok, pid} = Beetle.Backend.ETS.start_link(args)
 
   `args` is a keyword list:
-  - `ets_table_name`: (atom) table name to use, defaults to `:hammer_ets_buckets`
+  - `ets_table_name`: (atom) table name to use, defaults to `:beetle_ets_buckets`
   - `expiry_ms`: (integer) time in ms before a bucket is auto-deleted,
     should be larger than the expected largest size/duration of a bucket
   - `cleanup_interval_ms`: (integer) time between cleanup runs,
 
   Example:
 
-      Hammer.Backend.ETS.start_link(
+      Beetle.Backend.ETS.start_link(
         expiry_ms: 1000 * 60 * 60,
         cleanup_interval_ms: 1000 * 60 * 10
       )
   """
 
-  @behaviour Hammer.Backend
+  @behaviour Beetle.Backend
 
   @type bucket_key :: {bucket :: integer, id :: String.t()}
   @type bucket_info ::
           {key :: bucket_key, count :: integer, created :: integer, updated :: integer}
 
   use GenServer
-  alias Hammer.Utils
+  alias Beetle.Utils
 
   ## Public API
 
@@ -121,7 +121,7 @@ defmodule Hammer.Backend.ETS do
   ## GenServer Callbacks
 
   def init(args) do
-    ets_table_name = Keyword.get(args, :ets_table_name, :hammer_ets_buckets)
+    ets_table_name = Keyword.get(args, :ets_table_name, :beetle_ets_buckets)
     cleanup_interval_ms = Keyword.get(args, :cleanup_interval_ms)
     expiry_ms = Keyword.get(args, :expiry_ms)
 

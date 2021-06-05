@@ -1,18 +1,18 @@
-defmodule Hammer.Mixfile do
+defmodule Beetle.Mixfile do
   use Mix.Project
 
   def project do
     [
-      app: :hammer,
+      app: :beetle,
       description: "A rate-limiter with plugable backends.",
       package: [
-        name: :hammer,
+        name: :beetle,
         maintainers: ["Shane Kilkelly (shane@kilkelly.me)"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/ExHammer/hammer"}
+        links: %{"GitHub" => "https://github.com/ExBeetle/beetle"}
       ],
-      source_url: "https://github.com/ExHammer/hammer",
-      homepage_url: "https://github.com/ExHammer/hammer",
+      source_url: "https://github.com/ExBeetle/beetle",
+      homepage_url: "https://github.com/ExBeetle/beetle",
       version: "6.0.0",
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
@@ -37,7 +37,9 @@ defmodule Hammer.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     # Specify extra applications you'll use from Erlang/Elixir
-    [mod: {Hammer.Application, []}, extra_applications: [:logger, :runtime_tools]]
+    [
+      extra_applications: [:logger, :runtime_tools]
+    ]
   end
 
   # Dependencies can be Hex packages:

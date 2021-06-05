@@ -3,11 +3,11 @@
 
 ## Installation
 
-Add Hammer as a dependency in `mix.exs`:
+Add Beetle as a dependency in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:hammer, "~> 6.0"}]
+  [{:beetle, "~> 6.0"}]
 end
 ```
 
@@ -21,11 +21,11 @@ per-client, or per some other unique-ish value, such as IP address. It's much
 rarer, but not unheard-of, to limit the action globally without taking the
 identity of the user or client into account.
 
-In the Hammer API, the maximum number of actions is the `limit`, and the
+In the Beetle API, the maximum number of actions is the `limit`, and the
 timespan (in milliseconds) is the `scale_ms`. The combination of the name of the
 action with some unique identifier is the `id`.
 
-Hammer uses a [Token Bucket](https://en.wikipedia.org/wiki/Token_bucket)
+Beetle uses a [Token Bucket](https://en.wikipedia.org/wiki/Token_bucket)
 algorithm to count the number of actions occurring in a "bucket". If the count
 within the bucket is lower than the limit, then the action is allowed, otherwise
 it is denied.
@@ -33,24 +33,24 @@ it is denied.
 
 ## Usage
 
-To use Hammer, you need to do two things:
+To use Beetle, you need to do two things:
 
-- Configure the `:hammer` application
-- Use the functions in the `Hammer` module
+- Configure the `:beetle` application
+- Use the functions in the `Beetle` module
 
 In this example, we will use the `ETS` backend, which stores data in an
 in-memory ETS table.
 
 
-## Configuring Hammer
+## Configuring Beetle
 
-The Hammer OTP application is configured the usual way, using `Mix.Config`.
+The Beetle OTP application is configured the usual way, using `Mix.Config`.
 Your project probably has a `config/config.exs` file, in which you should
-configure Hammer, like so:
+configure Beetle, like so:
 
 ```elixir
-config :hammer,
-  backend: {Hammer.Backend.ETS,
+config :beetle,
+  backend: {Beetle.Backend.ETS,
             [expiry_ms: 60_000 * 60 * 4,
              cleanup_interval_ms: 60_000 * 10]}
 ```
@@ -77,15 +77,15 @@ determines the size of the pool, and `:pool_max_overflow` determines how many ex
 workers can be spawned when the system is under pressure. The default for both is `0`,
 which will be fine for most systems. (Note: we've seen some weird errors sometimes when using a `:pool_max_overflow` higher than zero. Always check how this works for you in production, and consider setting a higher `:pool_size` instead).
 
-Luckily, even if you don't configure `:hammer` at all, the application will
+Luckily, even if you don't configure `:beetle` at all, the application will
 default to the ETS backend anyway, with some sensible defaults.
 
 
-## The Hammer Module
+## The Beetle Module
 
-Once the Hammer application is running (and it should just start automatically
+Once the Beetle application is running (and it should just start automatically
 when your system starts), All you need to do is use the various functions in the
-`Hammer` module:
+`Beetle` module:
 
 - `check_rate(id::string, scale_ms::integer, limit::integer)`
 - `check_rate_inc(id::string, scale_ms::integer, limit::integer, increment::integer)`
@@ -105,7 +105,7 @@ Example:
 ```elixir
 # limit file uploads to 10 per minute per user
 user_id = get_user_id_somehow()
-case Hammer.check_rate("upload_file:#{user_id}", 60_000, 10) do
+case Beetle.check_rate("upload_file:#{user_id}", 60_000, 10) do
   {:allow, _count} ->
     # upload the file
   {:deny, _limit} ->
@@ -116,7 +116,7 @@ end
 
 ## Custom increments
 
-The `Hammer` module also includes  a `check_rate_inc` function, which allows you
+The `Beetle` module also includes  a `check_rate_inc` function, which allows you
 to specify the number by which to increment the current bucket. This is useful
 for rate-limiting APIs which have some idea of "cost", where the cost of a given
 operation can be determined and expressed as an integer.
@@ -127,7 +127,7 @@ Example:
 # Bulk file upload
 user_id = get_user_id_somehow()
 n = get_number_of_files()
-case Hammer.check_rate_inc("upload_file_bulk:#{user_id}", 60_000, 10, n) do
+case Beetle.check_rate_inc("upload_file_bulk:#{user_id}", 60_000, 10, n) do
   {:allow, _count} ->
     # upload all of the files
   {:deny, _limit} ->
@@ -141,19 +141,19 @@ end
 There may come a time when ETS just doesn't cut it, for example if we end up
 load-balancing across many nodes and want to keep our rate-limiter state in one
 central store. [Redis](https://redis.io) is ideal for this use-case, and
-fortunately Hammer supports
-a [Redis backend](https://github.com/ExHammer/hammer-backend-redis).
+fortunately Beetle supports
+a [Redis backend](https://github.com/ExBeetle/beetle-backend-redis).
 
 To change our application to use the Redis backend, we only need to install the
 redis backend package, and change the `:backend` tuple that is used to configure
-the `:hammer` application:
+the `:beetle` application:
 
 ```elixir
-# config :hammer,
-#   backend: {Hammer.Backend.ETS, []}
+# config :beetle,
+#   backend: {Beetle.Backend.ETS, []}
 
-config :hammer,
-  backend: {Hammer.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
+config :beetle,
+  backend: {Beetle.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
                                    redix_config: [host: "localhost",
                                                   port: 6379],
                                    pool_size: 4,
@@ -165,7 +165,7 @@ Then it should all Just Work™.
 
 ## (Advanced) using multiple backends at the same time
 
-Hammer can be configured to start multiple backends, which can then be referred
+Beetle can be configured to start multiple backends, which can then be referred
 to separately when checking a rate-limit. In this example we configure both and
 ETS backend under the key `:in_memory`, and a Redis backend under the key
 `:redis`...
@@ -173,10 +173,10 @@ ETS backend under the key `:in_memory`, and a Redis backend under the key
 ```elixir
 
 
-config :hammer,
+config :beetle,
   backend: [
-    in_memory: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 2]},
-    redis: {Hammer.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
+    in_memory: {Beetle.Backend.ETS, [expiry_ms: 60_000 * 60 * 2]},
+    redis: {Beetle.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
                                     redix_config: [host: "localhost",
                                                     port: 6379]]}
   ]
@@ -185,8 +185,8 @@ config :hammer,
 We can then refer to these backends separately:
 
 ```elixir
-Hammer.check_rate(:in_memory, "upload:#{user_id}", 60_000, 5)
-Hammer.check_rate(:redis,     "upload:#{user_id}", 60_000, 5)
+Beetle.check_rate(:in_memory, "upload:#{user_id}", 60_000, 5)
+Beetle.check_rate(:redis,     "upload:#{user_id}", 60_000, 5)
 ```
 
 When using multiple backends the backend specifier key is mandatory, there is no
@@ -196,12 +196,12 @@ In version 4.0 and up, it is even possible to have multiple instances of the sam
 backend type, like so:
 
 ```elixir
-config :hammer,
+config :beetle,
   backend: [
-    redis_one: {Hammer.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
+    redis_one: {Beetle.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
                                        redix_config: [host: "localhost",
                                                       port: 6666]]}
-    redis_two: {Hammer.Backend.Redis, [expiry_ms: 60_000 * 60 * 5,
+    redis_two: {Beetle.Backend.Redis, [expiry_ms: 60_000 * 60 * 5,
                                        redix_config: [host: "localhost",
                                                       port: 7777]]}
   ]
@@ -210,14 +210,14 @@ config :hammer,
 
 ## Further Reading
 
-See the docs for the [Hammer](/hammer/Hammer.html) module for full documentation
-on all the functions created by `use Hammer`.
+See the docs for the [Beetle](/beetle/Beetle.html) module for full documentation
+on all the functions created by `use Beetle`.
 
-See the [Hammer.Application](/hammer/Hammer.Application.html) for all
+See the [Beetle.Application](/beetle/Beetle.Application.html) for all
 configuration options.
 
 Also, consult the documentation for the backend you are using, for any extra
 configuration options that may be relevant.
 
-See the [Creating Backends](/hammer/creatingbackends.html) for information on
-creating new backends for Hammer.
+See the [Creating Backends](/beetle/creatingbackends.html) for information on
+creating new backends for Beetle.
