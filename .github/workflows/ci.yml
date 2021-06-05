@@ -1,0 +1,42 @@
+name: CI
+env:
+  ELIXIR_VERSION: "1.12.0"
+  MIX_ENV: test
+  OTP_VERSION: "24.0"
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+      - uses: actions/cache@v2.1.6
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+      - uses: actions/cache@v2.1.6
+        with:
+          path: _build/test
+          key: ${{ runner.os }}-test-build
+          restore-keys: |
+            ${{ runner.os }}-test-build
+      - name: Install Dependencies
+        run: mix deps.get
+      - name: Compile app
+        run: mix compile --force --warnings-as-errors
+      - name: Check format
+        run: mix format --check-formatted
+      - name: Credo
+        run: mix credo --strict
+      - name: Run Tests
+        run: mix test
