@@ -7,21 +7,17 @@ defmodule Beetle.Mixfile do
       description: "A rate-limiter with plugable backends.",
       package: [
         name: :beetle,
-        maintainers: ["Shane Kilkelly (shane@kilkelly.me)"],
+        maintainers: ["Ihor Katkov (ihorkatkov@gmail.com)"],
         licenses: ["MIT"],
-        links: %{"GitHub" => "https://github.com/ExBeetle/beetle"}
+        links: %{"GitHub" => "https://github.com/ihorkatkov/beetle"}
       ],
-      source_url: "https://github.com/ExBeetle/beetle",
-      homepage_url: "https://github.com/ExBeetle/beetle",
-      version: "6.0.0",
+      source_url: "https://github.com/ihorkatkov/beetle",
+      homepage_url: "https://github.com/ihorkatkov/beetle",
+      version: "1.0.0",
       elixir: "~> 1.6",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      docs: [
-        main: "frontpage",
-        extras: ["doc_src/Frontpage.md", "doc_src/Tutorial.md", "doc_src/CreatingBackends.md"]
-      ],
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
