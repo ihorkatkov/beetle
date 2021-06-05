@@ -1,8 +1,22 @@
-# Beetle, a Rate-Limiter for Elixir
+# Beetle
 
-Beetle is a rate-limiter for the [Elixir](https://elixir-lang.org/) language.
-It's killer feature is a pluggable backend system, allowing you to use whichever
-storage suits your needs. Currently, backends for ETS,
+A rate-limiter for Elixir, with pluggable storage backends.
+
+***DISCLAIMER***
+This library is a fork of an awesome and feature-complete library [Hammer](https://github.com/ExBeetle/hammer).
+As of writing this text, `Hammer` doesn't have any critical issues and one should be really comfortable to use it.
+
+Why I decided to fork:
+- Hammer seems like is not beeing maintaned anymore.
+- I wanted a simpler version without Elixir application (and configuration files) with additional features
+
+Differences with `Hammer`:
+- `Beetle` doesn't starts automatically. One should specify child specs in his application
+- `Beetle` has decorators
+- `Beetle` is faster within ETS backend
+- `Beetle` is maintaned
+- One could use `Hammer` backends with `Beetle`. It's backward compatible
+
 [Redis](https://github.com/ExBeetle/beetle-backend-redis), and [Mnesia](https://github.com/ExBeetle/beetle-backend-mnesia) are available.
 
 
@@ -17,14 +31,6 @@ storage suits your needs. Currently, backends for ETS,
 
 To get started with Beetle, read the [Tutorial](/beetle/tutorial.html).
 
-See the [Beetle.Application module](/beetle/Beetle.Application.html) for full
-documentation of configuration options.
-
 A primary goal of the Beetle project is to make it easy to implement new storage
 backends. See the [documentation on creating
 backends](/beetle/creatingbackends.html) for more details.
-
-## New! Beetle-Plug
-
-We've just released a new helper-library to make adding rate-limiting to your Phoenix
-(or other plug-based) application even easier: [Beetle.Plug](https://github.com/ExBeetle/beetle-plug).

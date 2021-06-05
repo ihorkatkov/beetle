@@ -12,8 +12,8 @@ Why I decided to fork:
 
 Differences with `Hammer`:
 - `Beetle` doesn't starts automatically. One should specify child specs in his application
-- `Beetle` has decorators
-- `Beetle` is faster within ETS backend
+- `Beetle` has decorators (WIP)
+- `Beetle` is faster within ETS backend (WIP)
 - `Beetle` is maintaned
 - One could use `Hammer` backends with `Beetle`. It's backward compatible
 
