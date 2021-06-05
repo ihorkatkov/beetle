@@ -1,14 +1,14 @@
 # Beetle makefile
 
-default: format test docs coveralls
+default: format test coveralls
 
 
 format:
-	mix format mix.exs "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
+	mix format
 
 
 test: format
-	mix test --no-start
+	mix test
 
 
 dialyzer:
@@ -24,11 +24,7 @@ docs:
 
 
 coveralls:
-	mix coveralls --no-start
+	mix coveralls
 
 
-coveralls-travis:
-	mix coveralls.travis --no-start
-
-
-.PHONY: format test docs coveralls coveralls-travis
+.PHONY: format test coveralls

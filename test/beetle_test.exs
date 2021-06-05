@@ -31,7 +31,7 @@ defmodule BeetleTest do
   end
 
   test "make_rate_checker" do
-    check = Beetle.make_rate_checker("some-prefix:", 10000, 2)
+    check = Beetle.make_rate_checker("some-prefix:", 10_000, 2)
     assert {:allow, 1} = check.("aaa")
     assert {:allow, 2} = check.("aaa")
     assert {:deny, 2} = check.("aaa")
