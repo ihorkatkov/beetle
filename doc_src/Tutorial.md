@@ -7,7 +7,7 @@ Add Beetle as a dependency in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:beetle, "~> 6.0"}]
+  [{:beetle, "~> 1.0"}]
 end
 ```
 
@@ -44,20 +44,34 @@ in-memory ETS table.
 
 ## Configuring Beetle
 
-The Beetle OTP application is configured the usual way, using `Mix.Config`.
-Your project probably has a `config/config.exs` file, in which you should
-configure Beetle, like so:
+The Beetle backends don't start automatically, you should define it inside your
+supervisor. Like so:
 
 ```elixir
-config :beetle,
-  backend: {Beetle.Backend.ETS,
-            [expiry_ms: 60_000 * 60 * 4,
-             cleanup_interval_ms: 60_000 * 10]}
-```
+defmodule MyApp.Application do
+  # See https://hexdocs.pm/elixir/Application.html
+  # for more information on OTP Applications
+  @moduledoc false
 
-The only configuration key (so far) is `:backend`, and its value is a tuple/pair
-of the backend module name, and a backend-specific keyword list of configuration
-options.
+  use Application
+
+  @impl Application
+  def start(_type, _args) do
+    children = [
+      {Beetle.Backend.ETS,
+       [
+         ets_table_name: :hammer_backend_ets_buckets,
+         expiry_ms: 60_000 * 60 * 2,
+         cleanup_interval_ms: 60_000 * 2
+       ]}
+
+    ]
+
+    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+```
 
 Because expiry of stale buckets is so essential to the smooth operation of a
 rate-limiter, all backends will accept an `:expiry_ms` option, and many will
@@ -83,9 +97,7 @@ default to the ETS backend anyway, with some sensible defaults.
 
 ## The Beetle Module
 
-Once the Beetle application is running (and it should just start automatically
-when your system starts), All you need to do is use the various functions in the
-`Beetle` module:
+All you need to do is use the various functions in the `Beetle` module:
 
 - `check_rate(id::string, scale_ms::integer, limit::integer)`
 - `check_rate_inc(id::string, scale_ms::integer, limit::integer, increment::integer)`
@@ -142,71 +154,54 @@ There may come a time when ETS just doesn't cut it, for example if we end up
 load-balancing across many nodes and want to keep our rate-limiter state in one
 central store. [Redis](https://redis.io) is ideal for this use-case, and
 fortunately Beetle supports
-a [Redis backend](https://github.com/ExBeetle/beetle-backend-redis).
+a [Redis backend](https://github.com/ExBeetle/hammer-backend-redis).
 
-To change our application to use the Redis backend, we only need to install the
-redis backend package, and change the `:backend` tuple that is used to configure
-the `:beetle` application:
+To change our application to use the Redis backend, we need to install the
+redis backend package and change function arguments.
 
 ```elixir
-# config :beetle,
-#   backend: {Beetle.Backend.ETS, []}
+defmodule MyApp.Application do
+  # See https://hexdocs.pm/elixir/Application.html
+  # for more information on OTP Applications
+  @moduledoc false
 
-config :beetle,
-  backend: {Beetle.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
-                                   redix_config: [host: "localhost",
-                                                  port: 6379],
-                                   pool_size: 4,
-                                   pool_max_overflow: 2]}
+  use Application
+
+  @impl Application
+  def start(_type, _args) do
+    children = [
+      {Hammer.Backend.Redis,
+      [
+        expiry_ms: 60_000 * 60 * 2,
+        redix_config: [host: "localhost", port: 6379],
+        pool_size: 4,
+        pool_max_overflow: 2
+      ]}
+    ]
+
+    opts = [strategy: :one_for_one, name: MyApp.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+
+Beetle.check_rate(Hammer.Backend.Redis, "upload:#{user_id}", 60_000, 5)
 ```
-
-Then it should all Just Work™.
-
 
 ## (Advanced) using multiple backends at the same time
 
 Beetle can be configured to start multiple backends, which can then be referred
 to separately when checking a rate-limit. In this example we configure both and
-ETS backend under the key `:in_memory`, and a Redis backend under the key
-`:redis`...
-
-```elixir
-
-
-config :beetle,
-  backend: [
-    in_memory: {Beetle.Backend.ETS, [expiry_ms: 60_000 * 60 * 2]},
-    redis: {Beetle.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
-                                    redix_config: [host: "localhost",
-                                                    port: 6379]]}
-  ]
-```
+ETS backend and Redis backend
 
 We can then refer to these backends separately:
 
 ```elixir
-Beetle.check_rate(:in_memory, "upload:#{user_id}", 60_000, 5)
-Beetle.check_rate(:redis,     "upload:#{user_id}", 60_000, 5)
+Beetle.check_rate(Beetle.Backend.ETS,   "upload:#{user_id}", 60_000, 5)
+Beetle.check_rate(Hammer.Backend.Redis, "upload:#{user_id}", 60_000, 5)
 ```
 
 When using multiple backends the backend specifier key is mandatory, there is no
 notion of a default backend.
-
-In version 4.0 and up, it is even possible to have multiple instances of the same
-backend type, like so:
-
-```elixir
-config :beetle,
-  backend: [
-    redis_one: {Beetle.Backend.Redis, [expiry_ms: 60_000 * 60 * 2,
-                                       redix_config: [host: "localhost",
-                                                      port: 6666]]}
-    redis_two: {Beetle.Backend.Redis, [expiry_ms: 60_000 * 60 * 5,
-                                       redix_config: [host: "localhost",
-                                                      port: 7777]]}
-  ]
-```
-
 
 ## Further Reading
 

@@ -39,7 +39,7 @@ jobs:
         id: plt-cache
         with:
           path: priv/plts
-          key: ${{ runner.os }}-dialyzer-plts-v3-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+          key: ${{ runner.os }}-dialyzer-plts-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
 
       - name: Create PLTs
         if: steps.plt-cache.outputs.cache-hit != 'true'
