@@ -19,6 +19,7 @@ defmodule Beetle.Mixfile do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
+      dialyzer: dialyzer(),
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.detail": :test,
@@ -35,6 +36,13 @@ defmodule Beetle.Mixfile do
     # Specify extra applications you'll use from Erlang/Elixir
     [
       extra_applications: [:logger, :runtime_tools]
+    ]
+  end
+
+  defp dialyzer do
+    [
+      plt_core_path: "priv/plts",
+      plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
     ]
   end
 
