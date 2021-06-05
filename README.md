@@ -1,20 +1,21 @@
-<p align="center"><img src="logo/horizontal.png" alt="beetle" height="150px"></p>
-
 # Beetle
 
 A rate-limiter for Elixir, with pluggable storage backends.
 
-[![Build Status](https://travis-ci.org/ExBeetle/beetle.svg?branch=master)](https://travis-ci.org/ExBeetle/beetle)
+***DISCLAIMER***
+This library is a fork of an awesome and feature-complete library [Hammer](https://github.com/ExBeetle/hammer).
+As of writing this text, `Hammer` doesn't have any critical issues and one should be really comfortable to use it.
 
-[![Coverage Status](https://coveralls.io/repos/github/ExBeetle/beetle/badge.svg?branch=master)](https://coveralls.io/github/ExBeetle/beetle?branch=master)
+Why I decided to fork:
+- Hammer seems like is not beeing maintaned anymore.
+- I wanted a simpler version without Elixir application (and configuration files).
+- I wanted additional functionality like decorators.
 
-
-## New! Beetle-Plug
-
-We've just released a new helper-library to make adding rate-limiting to your Phoenix
-(or other plug-based) application even easier: [Beetle.Plug](https://github.com/ExBeetle/beetle-plug).
-
-
+Differences with `Hammer`:
+- `Beetle` doesn't starts automatically. One should specify child specs in his application
+- `Beetle` has decorators
+- `Beetle` is maintaned
+- One could use `Hammer` backends with `Beetle`. It's backward compatible
 
 ## Installation
 
@@ -23,7 +24,7 @@ by adding `beetle` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:beetle, "~> 6.0"}]
+  [{:beetle, "~> 1.0"}]
 end
 ```
 
@@ -33,7 +34,6 @@ end
 On hexdocs: [https://hexdocs.pm/beetle/frontpage.html](https://hexdocs.pm/beetle/frontpage.html)
 
 The [Tutorial](https://hexdocs.pm/beetle/tutorial.html) is an especially good place to start.
-
 
 ## Usage
 
@@ -72,21 +72,17 @@ config :beetle,
 
 See the [Tutorial](https://hexdocs.pm/beetle/tutorial.html) for more.
 
-See the [Beetle Testbed](https://github.com/ExBeetle/beetle-testbed) app for an example of
-using Beetle in a Phoenix application.
-
-
 ## Available Backends
 
 - Beetle.Backend.ETS (provided with Beetle for testing and dev purposes, not very good for production use)
-- [Beetle.Backend.Redis](https://github.com/ExBeetle/beetle-backend-redis)
-- [Beetle.Backend.Mnesia](https://github.com/ExBeetle/beetle-backend-mnesia) (beta)
+- [Hammer.Backend.Redis](https://github.com/ExHammer/hammer-backend-redis)
+- [Hammer.Backend.Mnesia](https://github.com/ExHammer/hammer-backend-mnesia) (beta)
 
 ## Getting Help
 
-If you're having trouble, either open an issue on this repo, or reach out to the maintainers ([@shanekilkelly](https://twitter.com/shanekilkelly)) on Twitter.
+If you're having trouble, either open an issue on this repo, or reach out to the maintainers on `ihorkatkov@gmail.com`
 
 
 ## Acknowledgements
 
-Beetle was inspired by the [ExRated](https://github.com/grempe/ex_rated) library, by [grempe](https://github.com/grempe).
+Beetle was inspired and forked from [Hammer](https://github.com/ExBeetle/hammer)
