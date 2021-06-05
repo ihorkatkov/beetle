@@ -1,6 +1,6 @@
 # Beetle makefile
 
-default: format test coveralls
+default: format test coveralls docs
 
 
 format:
@@ -27,4 +27,4 @@ coveralls:
 	mix coveralls
 
 
-.PHONY: format test coveralls
+.PHONY: format test coveralls docs
