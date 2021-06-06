@@ -89,14 +89,22 @@ The `Beetle` module provides the following functions:
 - `inspect_bucket(id, scale_ms, limit)`
 - `delete_buckets(id)`
 
-Backends are configured via `Mix.Config`:
+The user is responsible for configuring a backend and starting it under his supervision tree
 
 ```elixir
-config :beetle,
-  backend: {Beetle.Backend.ETS, [expiry_ms: 60_000 * 60 * 4,
-                                 cleanup_interval_ms: 60_000 * 10]}
-```
+defmodule MyApp.VideoUpload do
 
+  def upload(video_data, user_id) do
+    case Beetle.check_rate(YourBackend, "upload_video:#{user_id}", 60_000, 5) do
+      {:allow, _count} ->
+        # upload the video, somehow
+      {:deny, _limit} ->
+        # deny the request
+    end
+  end
+
+end
+```
 
 See the [Tutorial](https://hexdocs.pm/beetle/tutorial.html) for more.
 
