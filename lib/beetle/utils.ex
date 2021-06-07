@@ -1,8 +1,8 @@
 defmodule Beetle.Utils do
   @moduledoc false
 
-  def pool_name do
-    pool_name(Beetle.Backend.ETS)
+  def pool_name(Beetle.Backend.ETS) do
+    pool_name(:single)
   end
 
   def pool_name(name) do

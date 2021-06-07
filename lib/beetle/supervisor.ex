@@ -13,18 +13,18 @@ defmodule Beetle.Supervisor do
   end
 
   # Single backend
-  def init(config) when is_tuple(config) do
+  def init(backend: backend) do
     children = [
-      to_pool_spec(:beetle_backend_single_pool, config)
+      to_pool_spec(:beetle_backend_single_pool, backend)
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
   end
 
   # Multiple backends
-  def init(config) when is_list(config) do
+  def init(backends: backends) do
     children =
-      config
+      backends
       |> Enum.map(fn {k, c} -> to_pool_spec(:"beetle_backend_#{k}_pool", c) end)
 
     Supervisor.init(children, strategy: :one_for_one)
