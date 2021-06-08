@@ -59,7 +59,7 @@ defmodule Beetle.Mixfile do
     [
       {:poolboy, "~> 1.5"},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
-      {:dialyxir, "~> 0.5", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.1", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.5", only: :test},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
     ]
