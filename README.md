@@ -11,7 +11,7 @@ Why I decided to fork:
 - I wanted a simpler version without Elixir application (and configuration files) with additional features
 
 Differences with `Hammer`:
-- `Beetle` doesn't starts automatically. One should specify child specs in his application
+- `Beetle` doesn't starts automatically. One should create a rate limiter module and specify it in Application suppervisor.
 - `Beetle` has decorators (WIP)
 - `Beetle` is faster within ETS backend (WIP)
 - `Beetle` is maintaned
@@ -41,6 +41,16 @@ Example:
 
 1. Add a backend to your suppervisor:
 ```elixir
+defmodule MyApp.RateLimiter do
+  use Beetle,
+    backend: Beetle.Backend.ETS,
+    opts: [
+      ets_table_name: :beetle_backend_ets_buckets,
+      expiry_ms: 60_000 * 60 * 2,
+      cleanup_interval_ms: 60_000 * 2
+    ]
+end
+
 defmodule MyApp.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
@@ -51,12 +61,7 @@ defmodule MyApp.Application do
   @impl Application
   def start(_type, _args) do
     children = [
-      {Beetle.Backend.ETS,
-       [
-         ets_table_name: :hammer_backend_ets_buckets,
-         expiry_ms: 60_000 * 60 * 2,
-         cleanup_interval_ms: 60_000 * 2
-       ]}
+      {MyApp.RateLimiter, []}
 
     ]
 
@@ -71,7 +76,7 @@ end
 defmodule MyApp.VideoUpload do
 
   def upload(video_data, user_id) do
-    case Beetle.check_rate("upload_video:#{user_id}", 60_000, 5) do
+    case MyApp.RateLimiter.check_rate("upload_video:#{user_id}", 60_000, 5) do
       {:allow, _count} ->
         # upload the video, somehow
       {:deny, _limit} ->
@@ -88,23 +93,6 @@ The `Beetle` module provides the following functions:
 - `check_rate_inc(id, scale_ms, limit, increment)`
 - `inspect_bucket(id, scale_ms, limit)`
 - `delete_buckets(id)`
-
-The user is responsible for configuring a backend and starting it under his supervision tree
-
-```elixir
-defmodule MyApp.VideoUpload do
-
-  def upload(video_data, user_id) do
-    case Beetle.check_rate(YourBackend, "upload_video:#{user_id}", 60_000, 5) do
-      {:allow, _count} ->
-        # upload the video, somehow
-      {:deny, _limit} ->
-        # deny the request
-    end
-  end
-
-end
-```
 
 See the [Tutorial](https://hexdocs.pm/beetle/tutorial.html) for more.
 
