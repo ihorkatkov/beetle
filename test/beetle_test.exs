@@ -3,14 +3,12 @@ defmodule BeetleTest do
 
   defmodule RateLimiter do
     use Beetle,
-      backend: {
-        Beetle.Backend.ETS,
-        [
-          ets_table_name: :beetle_backend_ets_buckets,
-          expiry_ms: 60_000 * 60 * 2,
-          cleanup_interval_ms: 60_000 * 2
-        ]
-      }
+      backend: Beetle.Backend.ETS,
+      opts: [
+        ets_table_name: :beetle_backend_ets_buckets,
+        expiry_ms: 60_000 * 60 * 2,
+        cleanup_interval_ms: 60_000 * 2
+      ]
   end
 
   setup _context do

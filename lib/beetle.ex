@@ -87,10 +87,9 @@ defmodule Beetle do
   """
 
   alias Beetle.Utils
-  alias Beetle.Backend
 
   defmacro __using__(config) do
-    backend = config |> Keyword.get(:backend, {Backend.ETS, []}) |> elem(0)
+    backend = Keyword.get(config, :backend, Beetle.Backend.ETS)
 
     # opts = Keyword.get(opts, :opts, expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10)
 
@@ -129,20 +128,9 @@ defmodule Beetle do
           end
       """
       def check_rate(id, scale_ms, limit) do
-        check_rate(unquote(backend), id, scale_ms, limit)
-      end
-
-      @spec check_rate(backend :: atom, id :: String.t(), scale_ms :: integer, limit :: integer) ::
-              {:allow, count :: integer}
-              | {:deny, limit :: integer}
-              | {:error, reason :: any}
-      @doc """
-      Same as check_rate/3, but allows specifying a backend
-      """
-      def check_rate(backend, id, scale_ms, limit) do
         {stamp, key} = Utils.stamp_key(id, scale_ms)
 
-        case call_backend(backend, :count_hit, [key, stamp]) do
+        case call_backend(unquote(backend), :count_hit, [key, stamp]) do
           {:ok, count} ->
             if count > limit do
               {:deny, limit}
@@ -170,26 +158,9 @@ defmodule Beetle do
       of each hit can be specified.
       """
       def check_rate_inc(id, scale_ms, limit, increment) do
-        check_rate_inc(unquote(backend), id, scale_ms, limit, increment)
-      end
-
-      @spec check_rate_inc(
-              backend :: atom,
-              id :: String.t(),
-              scale_ms :: integer,
-              limit :: integer,
-              increment :: integer
-            ) ::
-              {:allow, count :: integer}
-              | {:deny, limit :: integer}
-              | {:error, reason :: any}
-      @doc """
-      Same as check_rate_inc/4, but allows specifying a backend.
-      """
-      def check_rate_inc(backend, id, scale_ms, limit, increment) do
         {stamp, key} = Utils.stamp_key(id, scale_ms)
 
-        case call_backend(backend, :count_hit, [key, stamp, increment]) do
+        case call_backend(unquote(backend), :count_hit, [key, stamp, increment]) do
           {:ok, count} ->
             if count > limit do
               {:deny, limit}
@@ -232,27 +203,10 @@ defmodule Beetle do
 
       """
       def inspect_bucket(id, scale_ms, limit) do
-        inspect_bucket(unquote(backend), id, scale_ms, limit)
-      end
-
-      @spec inspect_bucket(
-              backend :: atom,
-              id :: String.t(),
-              scale_ms :: integer,
-              limit :: integer
-            ) ::
-              {:ok,
-               {count :: integer, count_remaining :: integer, ms_to_next_bucket :: integer,
-                created_at :: integer | nil, updated_at :: integer | nil}}
-              | {:error, reason :: any}
-      @doc """
-      Same as inspect_bucket/3, but allows specifying a backend
-      """
-      def inspect_bucket(backend, id, scale_ms, limit) do
         {stamp, key} = Utils.stamp_key(id, scale_ms)
         ms_to_next_bucket = elem(key, 0) * scale_ms + scale_ms - stamp
 
-        case call_backend(backend, :get_bucket, [key]) do
+        case call_backend(unquote(backend), :get_bucket, [key]) do
           {:ok, nil} ->
             {:ok, {0, limit, ms_to_next_bucket, nil, nil}}
 
@@ -286,17 +240,7 @@ defmodule Beetle do
 
       """
       def delete_buckets(id) do
-        delete_buckets(unquote(backend), id)
-      end
-
-      @spec delete_buckets(backend :: atom, id :: String.t()) ::
-              {:ok, count :: integer}
-              | {:error, reason :: any}
-      @doc """
-      Same as delete_buckets/1, but allows specifying a backend
-      """
-      def delete_buckets(backend, id) do
-        call_backend(backend, :delete_buckets, [id])
+        call_backend(unquote(backend), :delete_buckets, [id])
       end
 
       @spec make_rate_checker(id_prefix :: String.t(), scale_ms :: integer, limit :: integer) ::
@@ -329,24 +273,8 @@ defmodule Beetle do
           end
       """
       def make_rate_checker(id_prefix, scale_ms, limit) do
-        make_rate_checker(unquote(backend), id_prefix, scale_ms, limit)
-      end
-
-      @spec make_rate_checker(
-              backend :: atom,
-              id_prefix :: String.t(),
-              scale_ms :: integer,
-              limit :: integer
-            ) ::
-              (id :: String.t() ->
-                 {:allow, count :: integer}
-                 | {:deny, limit :: integer}
-                 | {:error, reason :: any})
-      @doc """
-      """
-      def make_rate_checker(backend, id_prefix, scale_ms, limit) do
         fn id ->
-          check_rate(backend, "#{id_prefix}#{id}", scale_ms, limit)
+          check_rate("#{id_prefix}#{id}", scale_ms, limit)
         end
       end
 
