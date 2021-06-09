@@ -35,16 +35,32 @@ it is denied.
 
 To use Beetle, you need to do two things:
 
-- Configure the `:beetle` application
-- Use the functions in the `Beetle` module
+- Create a rate-limiter module
+- Start the module as a process inside your Application
+- Use the functions of the rate-limiter module
 
 In this example, we will use the `ETS` backend, which stores data in an
 in-memory ETS table.
 
+## Create a rate-limiter module
+It is a good practive to create adapters for third-party libraries. The library
+forces you to do so.
 
-## Configuring Beetle
+```elixir
+defmodule MyApp.RateLimiter do
+  use Beetle,
+    backend: Beetle.Backend.ETS,
+    opts: [
+      ets_table_name: :beetle_backend_ets_buckets,
+      expiry_ms: 60_000 * 60 * 2,
+      cleanup_interval_ms: 60_000 * 2
+    ]
+end
+```
 
-The Beetle backends don't start automatically, you should define it inside your
+## Start the module as a process inside your Application
+
+The Beetle backends don't start automatically, you should define your rate-limiter module from the step above inside your
 supervisor. Like so:
 
 ```elixir
@@ -58,13 +74,7 @@ defmodule MyApp.Application do
   @impl Application
   def start(_type, _args) do
     children = [
-      {Beetle.Backend.ETS,
-       [
-         ets_table_name: :hammer_backend_ets_buckets,
-         expiry_ms: 60_000 * 60 * 2,
-         cleanup_interval_ms: 60_000 * 2
-       ]}
-
+      {MyApp.RateLimiter, []}
     ]
 
     opts = [strategy: :one_for_one, name: MyApp.Supervisor]
@@ -95,9 +105,9 @@ Luckily, even if you don't configure `:beetle` at all, the application will
 default to the ETS backend anyway, with some sensible defaults.
 
 
-## The Beetle Module
+## The rate-limiter module
 
-All you need to do is use the various functions in the `Beetle` module:
+All you need to do is use the various functions of your rate-limiter module:
 
 - `check_rate(id::string, scale_ms::integer, limit::integer)`
 - `check_rate_inc(id::string, scale_ms::integer, limit::integer, increment::integer)`
@@ -117,7 +127,7 @@ Example:
 ```elixir
 # limit file uploads to 10 per minute per user
 user_id = get_user_id_somehow()
-case Beetle.check_rate("upload_file:#{user_id}", 60_000, 10) do
+case MyApp.RateLimiter.check_rate("upload_file:#{user_id}", 60_000, 10) do
   {:allow, _count} ->
     # upload the file
   {:deny, _limit} ->
@@ -128,7 +138,7 @@ end
 
 ## Custom increments
 
-The `Beetle` module also includes  a `check_rate_inc` function, which allows you
+The rate-limiter module also includes  a `check_rate_inc` function, which allows you
 to specify the number by which to increment the current bucket. This is useful
 for rate-limiting APIs which have some idea of "cost", where the cost of a given
 operation can be determined and expressed as an integer.
@@ -139,7 +149,7 @@ Example:
 # Bulk file upload
 user_id = get_user_id_somehow()
 n = get_number_of_files()
-case Beetle.check_rate_inc("upload_file_bulk:#{user_id}", 60_000, 10, n) do
+case MyApp.RateLimiter.check_rate_inc("upload_file_bulk:#{user_id}", 60_000, 10, n) do
   {:allow, _count} ->
     # upload all of the files
   {:deny, _limit} ->
@@ -160,6 +170,17 @@ To change our application to use the Redis backend, we need to install the
 redis backend package and change function arguments.
 
 ```elixir
+defmodule MyApp.RedisRateLimiter do
+  use Beetle,
+    backend: Hammer.Backend.Redis,
+    opts: [
+        expiry_ms: 60_000 * 60 * 2,
+        redix_config: [host: "localhost", port: 6379],
+        pool_size: 4,
+        pool_max_overflow: 2
+    ]
+end
+
 defmodule MyApp.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
@@ -170,13 +191,7 @@ defmodule MyApp.Application do
   @impl Application
   def start(_type, _args) do
     children = [
-      {Hammer.Backend.Redis,
-      [
-        expiry_ms: 60_000 * 60 * 2,
-        redix_config: [host: "localhost", port: 6379],
-        pool_size: 4,
-        pool_max_overflow: 2
-      ]}
+      {MyApp.RedisRateLimiter, []}
     ]
 
     opts = [strategy: :one_for_one, name: MyApp.Supervisor]
@@ -184,24 +199,8 @@ defmodule MyApp.Application do
   end
 end
 
-Beetle.check_rate(Hammer.Backend.Redis, "upload:#{user_id}", 60_000, 5)
+MyApp.RedisRateLimiter.check_rate("upload:#{user_id}", 60_000, 5)
 ```
-
-## (Advanced) using multiple backends at the same time
-
-Beetle can be configured to start multiple backends, which can then be referred
-to separately when checking a rate-limit. In this example we configure both and
-ETS backend and Redis backend
-
-We can then refer to these backends separately:
-
-```elixir
-Beetle.check_rate(Beetle.Backend.ETS,   "upload:#{user_id}", 60_000, 5)
-Beetle.check_rate(Hammer.Backend.Redis, "upload:#{user_id}", 60_000, 5)
-```
-
-When using multiple backends the backend specifier key is mandatory, there is no
-notion of a default backend.
 
 ## Further Reading
 

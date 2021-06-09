@@ -3,12 +3,17 @@ defmodule Beetle do
   Documentation for Beetle module.
 
   This is the main API for the Beetle rate-limiter.
-  You have two ways of using it:
 
-  (recommended) By creating a module which will represent a rate-limiter
+  In order to use it, you should create a module which will represent a rate-limiter
   ```elixir
   defmodule MyApp.RateLimiter do
-    use Beetle
+    use Beetle,
+      backend: Beetle.Backend.ETS,
+      opts: [
+        ets_table_name: :beetle_backend_ets_buckets,
+        expiry_ms: 60_000 * 60 * 2,
+        cleanup_interval_ms: 60_000 * 2
+      ]
   end
 
   defmodule MyApp.Application do
@@ -21,12 +26,7 @@ defmodule Beetle do
     @impl Application
     def start(_type, _args) do
       children = [
-        {MyApp.RateLimiter,
-        [
-          ets_table_name: :hammer_backend_ets_buckets,
-          expiry_ms: 60_000 * 60 * 2,
-          cleanup_interval_ms: 60_000 * 2
-        ]}
+        {MyApp.RateLimiter, []}
 
       ]
 
@@ -46,52 +46,12 @@ defmodule Beetle do
     end
   end
   ```
-
-  By starting a backend manually
-  ```elixir
-    defmodule MyApp.Application do
-      # See https://hexdocs.pm/elixir/Application.html
-      # for more information on OTP Applications
-      @moduledoc false
-
-      use Application
-
-      @impl Application
-      def start(_type, _args) do
-        children = [
-          {MyApp.RateLimiter,
-          [
-            ets_table_name: :hammer_backend_ets_buckets,
-            expiry_ms: 60_000 * 60 * 2,
-            cleanup_interval_ms: 60_000 * 2
-          ]}
-
-        ]
-
-        opts = [strategy: :one_for_one, name: MyApp.Supervisor]
-        Supervisor.start_link(children, opts)
-      end
-    end
-
-    defmodule MyApp.VideoUpload do
-      def upload(video_data, user_id) do
-        case Beetle.check_rate(Beetle.Backend.ETS, "upload_video:user_id", 60_000, 5) do
-          {:allow, _count} ->
-            # upload the video, somehow
-          {:deny, _limit} ->
-            # deny the request
-        end
-      end
-    end
-  ```
   """
 
   alias Beetle.Utils
 
   defmacro __using__(config) do
     backend = Keyword.get(config, :backend, Beetle.Backend.ETS)
-
-    # opts = Keyword.get(opts, :opts, expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10)
 
     quote do
       def child_spec(_arg) do
@@ -120,7 +80,7 @@ defmodule Beetle do
       Example:
 
           user_id = 42076
-          case  check_rate("file_upload:\#{user_id}", 60_000, 5) do
+          case  MyApp.RateLimiter.check_rate("file_upload:\#{user_id}", 60_000, 5) do
             {:allow, _count} ->
               # do the file upload
             {:deny, _limit} ->
@@ -198,7 +158,7 @@ defmodule Beetle do
 
       Example:
 
-          inspect_bucket("file_upload:2042", 60_000, 5)
+          MyApp.RateLimiter.inspect_bucket("file_upload:2042", 60_000, 5)
           {:ok, {1, 2499, 29381612, 1450281014468, 1450281014468}}
 
       """
@@ -236,7 +196,7 @@ defmodule Beetle do
       Example:
 
           user_id = 2406
-          {:ok, _count} = delete_buckets("file_uploads:\#{user_id}")
+          {:ok, _count} = MyApp.RateLimiter.delete_buckets("file_uploads:\#{user_id}")
 
       """
       def delete_buckets(id) do
@@ -263,7 +223,7 @@ defmodule Beetle do
 
       Example:
 
-          chat_rate_limiter = make_rate_checker("send_chat_message:", 60_000, 20)
+          chat_rate_limiter = MyApp.RateLimiter.make_rate_checker("send_chat_message:", 60_000, 20)
           user_id = 203517
           case chat_rate_limiter.(user_id) do
             {:allow, _count} ->
