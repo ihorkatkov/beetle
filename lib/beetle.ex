@@ -48,6 +48,8 @@ defmodule Beetle do
   ```
   """
 
+  # credo:disable-for-this-file Credo.Check.Refactor.LongQuoteBlocks
+
   alias Beetle.Utils
 
   defmacro __using__(config) do
