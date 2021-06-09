@@ -109,4 +109,4 @@ If you're having trouble, either open an issue on this repo, or reach out to the
 
 ## Acknowledgements
 
-Beetle was inspired and forked from [Hammer](https://github.com/ExBeetle/hammer)
+Beetle was inspired and forked from [Hammer](https://github.com/ExHammer/hammer)
