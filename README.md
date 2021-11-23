@@ -6,16 +6,11 @@ A rate-limiter for Elixir, with pluggable storage backends.
 This library is a fork of an awesome and feature-complete library [Hammer](https://github.com/ExBeetle/hammer).
 As of writing this text, `Hammer` doesn't have any critical issues and one should be really comfortable to use it.
 
-Why I decided to fork:
-- Hammer seems like is not beeing maintaned anymore.
-- I wanted a simpler version without Elixir application (and configuration files) with additional features
-
-Differences with `Hammer`:
+## Differences with Hammer:
 - `Beetle` doesn't starts automatically. One should create a rate limiter module and specify it in Application suppervisor.
-- `Beetle` has decorators (WIP)
-- `Beetle` is faster within ETS backend (WIP)
+- `Beetle` has built-in telemetry
+- `Beetle` has `:decay` parameter
 - `Beetle` is maintaned
-- One could use `Hammer` backends with `Beetle`. It's backward compatible
 
 ## Installation
 
@@ -31,9 +26,7 @@ end
 
 ## Documentation
 
-On hexdocs: [https://hexdocs.pm/beetle/frontpage.html](https://hexdocs.pm/beetle/frontpage.html)
-
-The [Tutorial](https://hexdocs.pm/beetle/tutorial.html) is an especially good place to start.
+On hexdocs: [https://hexdocs.pm/beetle/api-reference.html](https://hexdocs.pm/beetle/api-reference.html)
 
 ## Usage
 
@@ -93,8 +86,6 @@ The `Beetle` module provides the following functions:
 - `check_rate_inc(id, scale_ms, limit, increment)`
 - `inspect_bucket(id, scale_ms, limit)`
 - `delete_buckets(id)`
-
-See the [Tutorial](https://hexdocs.pm/beetle/tutorial.html) for more.
 
 ## Available Backends
 
