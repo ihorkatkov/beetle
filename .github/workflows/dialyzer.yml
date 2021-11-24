@@ -20,13 +20,13 @@ jobs:
         with:
           otp-version: ${{ env.OTP_VERSION }}
           elixir-version: ${{ env.ELIXIR_VERSION }}
-      - uses: actions/cache@v2.1.6
+      - uses: actions/cache@v2.1.7
         with:
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
           restore-keys: |
             ${{ runner.os }}-mix-
-      - uses: actions/cache@v2.1.6
+      - uses: actions/cache@v2.1.7
         with:
           path: _build/test
           key: ${{ runner.os }}-test-build
@@ -35,7 +35,7 @@ jobs:
       - name: Install Dependencies
         run: mix deps.get
       - name: Retrieve PLT Cache
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         id: plt-cache
         with:
           path: priv/plts
